@@ -6,6 +6,8 @@ import (
 
 	"github.com/fenix-ds/simpletongorm/enuns"
 	"github.com/fenix-ds/simpletongorm/models"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -45,6 +47,32 @@ func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err 
 		}
 	case enuns.DB_SQLITEFILE:
 		db, err = gorm.Open(sqlite.Open(param.FilePathOrDns), &gormConfig)
+
+		if err != nil {
+			return nil, err
+		} else if param.MigrateTables != nil {
+			if err = dbMigrate(db, param.MigrateTables); err != nil {
+				return nil, err
+			}
+		}
+
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	case enuns.DB_MARIADB:
+		db, err = gorm.Open(mysql.Open(param.FilePathOrDns), &gormConfig)
+
+		if err != nil {
+			return nil, err
+		} else if param.MigrateTables != nil {
+			if err = dbMigrate(db, param.MigrateTables); err != nil {
+				return nil, err
+			}
+		}
+
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	case enuns.DB_POSTGRESQL:
+		db, err = gorm.Open(postgres.Open(param.FilePathOrDns), &gormConfig)
 
 		if err != nil {
 			return nil, err
