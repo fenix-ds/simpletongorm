@@ -6,6 +6,8 @@ import (
 	"github.com/fenix-ds/simpletongorm/enuns"
 	"github.com/fenix-ds/simpletongorm/models"
 	"github.com/fenix-ds/simpletongorm/utils"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -27,6 +29,10 @@ func (sg *SimpletonGorm) dbConnectionActive() (*gorm.DB, error) {
 		db = sg.sqliteInMemory
 	case enuns.DB_SQLITEFILE:
 		db, err = gorm.Open(sqlite.Open(*sg.filePathOrDns), sg.gormConfig)
+	case enuns.DB_MARIADB:
+		db, err = gorm.Open(mysql.Open(*sg.filePathOrDns), sg.gormConfig)
+	case enuns.DB_POSTGRESQL:
+		db, err = gorm.Open(postgres.Open(*sg.filePathOrDns), sg.gormConfig)
 	default:
 		return nil, fmt.Errorf("database type invalid")
 	}
