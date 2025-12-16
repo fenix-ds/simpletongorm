@@ -114,11 +114,6 @@ func (sg *SimpletonGorm) Save(param *models.SimpletonGormSave) error {
 		return fmt.Errorf("no records were saved")
 	}
 
-	if *sg.database != enuns.DB_SQLITEINMEMORY {
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
-	}
-
 	return nil
 }
 
@@ -276,11 +271,6 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 		return nil, err
 	}
 
-	if *sg.database != enuns.DB_SQLITEINMEMORY {
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
-	}
-
 	return &models.SimpletonGormResult{Data: data, Count: &countResult}, nil
 }
 
@@ -324,11 +314,6 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("no records were deleted")
-	}
-
-	if *sg.database != enuns.DB_SQLITEINMEMORY {
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
 	}
 
 	return nil
