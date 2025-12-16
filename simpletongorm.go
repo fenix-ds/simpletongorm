@@ -3,6 +3,7 @@ package simpletongorm
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/fenix-ds/simpletongorm/enuns"
 	"github.com/fenix-ds/simpletongorm/models"
@@ -14,10 +15,8 @@ import (
 )
 
 type SimpletonGorm struct {
-	database       *enuns.Database
-	sqliteInMemory *gorm.DB
-	filePathOrDns  *string
-	gormConfig     *gorm.Config
+	database *enuns.Database
+	db       *gorm.DB
 }
 
 func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err error) {
@@ -25,74 +24,55 @@ func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err 
 		return nil, err
 	}
 
-	var db *gorm.DB
 	gormConfig := gorm.Config{}
-
-	if param.SeeLog != nil {
-		if *param.SeeLog {
-			gormConfig.Logger = logger.Default.LogMode(logger.Info)
-		}
+	if param.SeeLog != nil && *param.SeeLog {
+		gormConfig.Logger = logger.Default.LogMode(logger.Info)
 	}
 
+	var db *gorm.DB
 	switch param.Database {
 	case enuns.DB_SQLITEINMEMORY:
 		db, err = gorm.Open(sqlite.Open(":memory:"), &gormConfig)
-
-		if err != nil {
-			return nil, err
-		} else if param.MigrateTables == nil {
-			return nil, fmt.Errorf("there are no models to migrate to the database")
-		} else if err = dbMigrate(db, param.MigrateTables); err != nil {
-			return nil, err
-		}
 	case enuns.DB_SQLITEFILE:
 		db, err = gorm.Open(sqlite.Open(param.FilePathOrDns), &gormConfig)
-
-		if err != nil {
-			return nil, err
-		} else if param.MigrateTables != nil {
-			if err = dbMigrate(db, param.MigrateTables); err != nil {
-				return nil, err
-			}
-		}
-
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
 	case enuns.DB_MARIADB:
 		db, err = gorm.Open(mysql.Open(param.FilePathOrDns), &gormConfig)
-
-		if err != nil {
-			return nil, err
-		} else if param.MigrateTables != nil {
-			if err = dbMigrate(db, param.MigrateTables); err != nil {
-				return nil, err
-			}
-		}
-
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
 	case enuns.DB_POSTGRESQL:
 		db, err = gorm.Open(postgres.Open(param.FilePathOrDns), &gormConfig)
-
-		if err != nil {
-			return nil, err
-		} else if param.MigrateTables != nil {
-			if err = dbMigrate(db, param.MigrateTables); err != nil {
-				return nil, err
-			}
-		}
-
-		sqlDB, _ := db.DB()
-		sqlDB.Close()
 	default:
 		return nil, fmt.Errorf("database type invalid")
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
+	if param.Database != enuns.DB_SQLITEINMEMORY {
+		if param.MigrateTables != nil {
+			if err = dbMigrate(db, param.MigrateTables); err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		if param.MigrateTables == nil {
+			return nil, fmt.Errorf("there are no models to migrate to the database")
+		} else if err = dbMigrate(db, param.MigrateTables); err != nil {
+			return nil, err
+		}
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	return &SimpletonGorm{
-		database:       &param.Database,
-		sqliteInMemory: db,
-		filePathOrDns:  &param.FilePathOrDns,
-		gormConfig:     &gormConfig,
+		database: &param.Database,
+		db:       db,
 	}, nil
 }
 

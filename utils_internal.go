@@ -6,9 +6,6 @@ import (
 	"github.com/fenix-ds/simpletongorm/enuns"
 	"github.com/fenix-ds/simpletongorm/models"
 	"github.com/fenix-ds/simpletongorm/utils"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -21,23 +18,10 @@ func dbMigrate(db *gorm.DB, tables []interface{}) error {
 }
 
 func (sg *SimpletonGorm) dbConnectionActive() (*gorm.DB, error) {
-	var db *gorm.DB
-	var err error
-
-	switch *sg.database {
-	case enuns.DB_SQLITEINMEMORY:
-		db = sg.sqliteInMemory
-	case enuns.DB_SQLITEFILE:
-		db, err = gorm.Open(sqlite.Open(*sg.filePathOrDns), sg.gormConfig)
-	case enuns.DB_MARIADB:
-		db, err = gorm.Open(mysql.Open(*sg.filePathOrDns), sg.gormConfig)
-	case enuns.DB_POSTGRESQL:
-		db, err = gorm.Open(postgres.Open(*sg.filePathOrDns), sg.gormConfig)
-	default:
-		return nil, fmt.Errorf("database type invalid")
+	if sg.db == nil {
+		return nil, fmt.Errorf("database not initialized")
 	}
-
-	return db, err
+	return sg.db, nil
 }
 
 func (sg *SimpletonGorm) applyJoinsFields(fieldsQueryMain string, joins []models.SimpletonGormFindJoins) string {
