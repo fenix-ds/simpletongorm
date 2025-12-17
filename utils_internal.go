@@ -181,14 +181,27 @@ func (sg *SimpletonGorm) applyFilters(filters []models.SimpletonGormFindFilters,
 			}
 		}
 
-		if index == 0 {
-			query = query.Where(*dataQuery, filter.Data)
+		if filter.OpComparison == enuns.OPCN_ISNULL {
+			if index == 0 {
+				query = query.Where(*dataQuery)
+			} else {
+				switch filters[index-1].OpLogic {
+				case enuns.OPLC_OR:
+					query = query.Or(*dataQuery)
+				case enuns.OPLC_AND:
+					query = query.Where(*dataQuery)
+				}
+			}
 		} else {
-			switch filters[index-1].OpLogic {
-			case enuns.OPLC_OR:
-				query = query.Or(*dataQuery, filter.Data)
-			case enuns.OPLC_AND:
+			if index == 0 {
 				query = query.Where(*dataQuery, filter.Data)
+			} else {
+				switch filters[index-1].OpLogic {
+				case enuns.OPLC_OR:
+					query = query.Or(*dataQuery, filter.Data)
+				case enuns.OPLC_AND:
+					query = query.Where(*dataQuery, filter.Data)
+				}
 			}
 		}
 	}
