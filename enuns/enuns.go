@@ -53,6 +53,7 @@ const (
 	OPCN_BETWEEN            OpComparison = "BETWEEN"
 	OPCN_IN                 OpComparison = "IN"
 	OPCN_IS                 OpComparison = "IS"
+	OPCN_ISNULL             OpComparison = "ISNULL"
 	OPCN_LESS_EQUAL_ISNULL  OpComparison = "<=,ISNULL"
 )
 
@@ -71,6 +72,7 @@ func (ryoc *OpComparison) Validate() error {
 		OPCN_BETWEEN,
 		OPCN_IN,
 		OPCN_IS,
+		OPCN_ISNULL,
 		OPCN_LESS_EQUAL_ISNULL:
 		return nil
 	default:

@@ -213,6 +213,8 @@ func (sg *SimpletonGorm) generateSQLFilter(filter *models.SimpletonGormFindFilte
 		query, err = sg.setDataToQueryComparison_IN(filter)
 	case enuns.OPCN_IS:
 		query = fmt.Sprintf("%s.%s IS ?", filter.TableNameFind, filter.Field)
+	case enuns.OPCN_ISNULL:
+		query = fmt.Sprintf("%s.%s ISNULL", filter.TableNameFind, filter.Field)
 	case enuns.OPCN_LESS_EQUAL_ISNULL:
 		query = fmt.Sprintf("%s.%s <= ? OR %s.%s IS NULL", filter.TableNameFind, filter.Field, filter.TableNameFind, filter.Field)
 	default:
