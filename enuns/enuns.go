@@ -54,6 +54,7 @@ const (
 	OPCN_IN                 OpComparison = "IN"
 	OPCN_IS                 OpComparison = "IS"
 	OPCN_ISNULL             OpComparison = "ISNULL"
+	OPCN_ISNOTNULL          OpComparison = "ISNOTNULL"
 	OPCN_LESS_EQUAL_ISNULL  OpComparison = "<=,ISNULL"
 )
 

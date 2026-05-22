@@ -154,6 +154,69 @@ func TestSimpletonGorm_Find_WithJoins_Sucess(t *testing.T) {
 	}
 }
 
+func TestSimpletonGorm_Find_WithFiltersAndJoins_Sucess(t *testing.T) {
+	type Test struct {
+		gorm.Model
+	}
+	type TestItem struct {
+		gorm.Model
+		TestId uint
+		Name   string
+	}
+
+	test := Test{}
+	testItem := TestItem{
+		Name: "Test 2",
+	}
+
+	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
+		Database:      enuns.DB_SQLITEINMEMORY,
+		MigrateTables: []interface{}{Test{}, TestItem{}},
+	}); err != nil {
+		t.Error(err)
+	} else if err = sg.Save(&models.SimpletonGormSave{
+		TableName: "tests", Data: &test,
+	}); err != nil {
+		t.Error(err)
+	} else {
+		testItem.TestId = test.ID
+
+		if err = sg.Save(&models.SimpletonGormSave{
+			TableName: "test_items", Data: &testItem,
+		}); err != nil {
+			t.Error(err)
+		}
+
+		tbl := "test_items"
+
+		if result, err := sg.Find(&models.SimpletonGormFind{
+			TableName: tbl,
+			FieldsView: []map[string]any{
+				{"id": "new_id"},
+			},
+			Joins: []models.SimpletonGormFindJoins{
+				{
+					Type: enuns.JT_LEFT, TableMainName: "test_items", TableMainField: "test_id", TableRelatedName: "tests", TableRelatedField: "id",
+					TableRelatedFieldsView: []models.SimpletonGormFindJoinsFieldsView{
+						{FieldName: "*"}},
+				},
+			},
+			Filters: []models.SimpletonGormFindFilters{
+				{
+					TableNameFind: &tbl,
+					Field:         "name", Data: "Test 2", OpComparison: enuns.OPCN_EQUAL, OpLogic: enuns.OPLC_EMPYT,
+				},
+			},
+		}); err != nil {
+			t.Error(err)
+		} else if *result.Count == 0 {
+			t.Error("data not found")
+		} else {
+			t.Log(result)
+		}
+	}
+}
+
 func TestSimpletonGorm_Find_WithOrders_Sucess(t *testing.T) {
 	type Test struct {
 		gorm.Model

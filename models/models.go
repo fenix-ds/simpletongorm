@@ -74,7 +74,7 @@ type SimpletonGormFindJoinsFieldsView struct {
 }
 
 type SimpletonGormFindFilters struct {
-	TableNameFind any
+	TableNameFind *string
 	Field         string
 	Data          any
 	OpComparison  enuns.OpComparison

@@ -193,7 +193,7 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 	if len(param.Filters) > 0 {
 		for index := range param.Filters {
 			if param.Filters[index].TableNameFind == nil {
-				param.Filters[index].TableNameFind = param.TableName
+				param.Filters[index].TableNameFind = &param.TableName
 			}
 		}
 

@@ -219,19 +219,21 @@ func (sg *SimpletonGorm) generateSQLFilter(filter *models.SimpletonGormFindFilte
 
 	switch filter.OpComparison {
 	case enuns.OPCN_LIKE_ANYWHERE, enuns.OPCN_LIKE_JUSTBEGINNING:
-		query = fmt.Sprintf("%s.%s LIKE ?", filter.TableNameFind, filter.Field)
+		query = fmt.Sprintf("%s.%s LIKE ?", *filter.TableNameFind, filter.Field)
 	case enuns.OPCN_BETWEEN:
 		query, err = sg.setDataToQueryComparison_BETWEEN(filter)
 	case enuns.OPCN_IN:
 		query, err = sg.setDataToQueryComparison_IN(filter)
 	case enuns.OPCN_IS:
-		query = fmt.Sprintf("%s.%s IS ?", filter.TableNameFind, filter.Field)
+		query = fmt.Sprintf("%s.%s IS ?", *filter.TableNameFind, filter.Field)
 	case enuns.OPCN_ISNULL:
-		query = fmt.Sprintf("%s.%s IS NULL", filter.TableNameFind, filter.Field)
+		query = fmt.Sprintf("%s.%s IS NULL", *filter.TableNameFind, filter.Field)
+	case enuns.OPCN_ISNOTNULL:
+		query = fmt.Sprintf("%s.%s IS NOT NULL", *filter.TableNameFind, filter.Field)
 	case enuns.OPCN_LESS_EQUAL_ISNULL:
-		query = fmt.Sprintf("%s.%s <= ? OR %s.%s IS NULL", filter.TableNameFind, filter.Field, filter.TableNameFind, filter.Field)
+		query = fmt.Sprintf("%s.%s <= ? OR %s.%s IS NULL", *filter.TableNameFind, filter.Field, *filter.TableNameFind, filter.Field)
 	default:
-		query = fmt.Sprintf("%s.%s %s ?", filter.TableNameFind, filter.Field, string(filter.OpComparison))
+		query = fmt.Sprintf("%s.%s %s ?", *filter.TableNameFind, filter.Field, string(filter.OpComparison))
 	}
 
 	if err != nil {
@@ -247,7 +249,7 @@ func (sg *SimpletonGorm) setDataToQueryComparison_BETWEEN(filter *models.Simplet
 			return "", fmt.Errorf("the BETWEEN selector must have 2 values")
 		}
 
-		result := fmt.Sprintf("%s.%s >= ? AND %s.%s <= ?", filter.TableNameFind, filter.Field, filter.TableNameFind, filter.Field)
+		result := fmt.Sprintf("%s.%s >= ? AND %s.%s <= ?", *filter.TableNameFind, filter.Field, *filter.TableNameFind, filter.Field)
 
 		return result, nil
 
@@ -272,7 +274,7 @@ func (sg *SimpletonGorm) setDataToQueryComparison_IN(filter *models.SimpletonGor
 
 		}
 
-		result := fmt.Sprintf("%s.%s IN (%s)", filter.TableNameFind, filter.Field, values)
+		result := fmt.Sprintf("%s.%s IN (%s)", *filter.TableNameFind, filter.Field, values)
 
 		return result, nil
 
