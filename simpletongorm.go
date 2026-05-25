@@ -82,6 +82,10 @@ func (sg *SimpletonGorm) Save(param *models.SimpletonGormSave) error {
 		return err
 	}
 
+	if param == nil {
+		return fmt.Errorf("parameters not found")
+	}
+
 	if param.CheckData {
 		if !db.Migrator().HasTable(param.TableName) {
 			return fmt.Errorf("%s table not found", param.TableName)
@@ -122,6 +126,10 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 	db, err := sg.dbConnectionActive()
 	if err != nil {
 		return nil, err
+	}
+
+	if param == nil {
+		return nil, fmt.Errorf("parameters not found")
 	}
 
 	if param.CheckData {
@@ -280,6 +288,10 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 		return err
 	}
 
+	if param == nil {
+		return fmt.Errorf("parameters not found")
+	}
+
 	if param.Type != enuns.DT_SOFT && param.Type != enuns.DT_PERMANENT {
 		return fmt.Errorf("invalid deletion type")
 	}
@@ -317,4 +329,50 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 	}
 
 	return nil
+}
+
+func (sg *SimpletonGorm) SQLExec(param *models.SimpletonGormSQL) error {
+	db, err := sg.dbConnectionActive()
+	if err != nil {
+		return err
+	}
+
+	if param == nil {
+		return fmt.Errorf("parameters not found")
+	}
+
+	if len(param.SQL) == 0 {
+		return fmt.Errorf("sql command not found")
+	}
+
+	result := db.Exec(param.SQL, param.FieldsValues...)
+
+	return result.Error
+}
+
+func (sg *SimpletonGorm) SQLFind(param *models.SimpletonGormSQL) (result *models.SimpletonGormResult, err error) {
+	db, err := sg.dbConnectionActive()
+	if err != nil {
+		return nil, err
+	}
+
+	if param == nil {
+		return nil, fmt.Errorf("parameters not found")
+	}
+
+	if len(param.SQL) == 0 {
+		return nil, fmt.Errorf("sql command not found")
+	}
+
+	var data []map[string]any
+	if err := db.Raw(param.SQL, param.FieldsValues...).Scan(&data).Error; err != nil {
+		return nil, err
+	}
+
+	var count uint64 = uint64(len(data))
+
+	return &models.SimpletonGormResult{
+		Data:  data,
+		Count: &count,
+	}, nil
 }

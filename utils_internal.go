@@ -101,7 +101,7 @@ func (sg *SimpletonGorm) applyJoinsConditions(query *gorm.DB, joins []models.Sim
 func (sg *SimpletonGorm) validateJoins(db *gorm.DB, joins []models.SimpletonGormFindJoins) error {
 	for _, join := range joins {
 		switch join.Type {
-		case enuns.JT_LEFT:
+		case enuns.JT_LEFT, enuns.JT_RIGHT:
 			//CHECK TABLE MAIN
 			if !db.Migrator().HasTable(join.TableMainName) {
 				return fmt.Errorf("%s table to create join not found", join.TableMainName)

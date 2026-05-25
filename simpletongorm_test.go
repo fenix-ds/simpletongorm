@@ -282,3 +282,98 @@ func TestSimpletonGorm_Delete_Sucess(t *testing.T) {
 		t.Log(data)
 	}
 }
+
+func TestSimpletonGorm_SQLFind_Sucess(t *testing.T) {
+	type Test struct {
+		gorm.Model
+	}
+
+	test := []Test{{}, {}, {}, {}}
+
+	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
+		Database:      enuns.DB_SQLITEINMEMORY,
+		MigrateTables: []interface{}{Test{}},
+	}); err != nil {
+		t.Error(err)
+	} else {
+		for i := 0; i < len(test); i++ {
+			if err = sg.Save(&models.SimpletonGormSave{
+				TableName: "tests", Data: &test[i],
+			}); err != nil {
+				t.Error(err)
+				break
+			}
+		}
+
+		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+			SQL:          "Select * from tests",
+			FieldsValues: nil,
+		}); err != nil {
+			t.Error(err)
+		} else if *result.Count == 0 {
+			t.Error("data not found")
+		} else {
+			t.Log(result)
+		}
+	}
+}
+
+func TestSimpletonGorm_SQLExec_Sucess(t *testing.T) {
+	type Test struct {
+		gorm.Model
+	}
+
+	test := []Test{{}, {}, {}, {}}
+
+	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
+		Database:      enuns.DB_SQLITEINMEMORY,
+		MigrateTables: []interface{}{Test{}},
+	}); err != nil {
+		t.Error(err)
+	} else {
+		for i := 0; i < len(test); i++ {
+			if err = sg.Save(&models.SimpletonGormSave{
+				TableName: "tests", Data: &test[i],
+			}); err != nil {
+				t.Error(err)
+				break
+			}
+		}
+
+		var countBeforeCommand uint64
+		var countAfterCommand uint64
+
+		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+			SQL:          "Select * from tests",
+			FieldsValues: nil,
+		}); err != nil {
+			t.Error(err)
+		} else if *result.Count == 0 {
+			t.Error("data not found")
+		} else {
+			countBeforeCommand = *result.Count
+		}
+
+		if err := sg.SQLExec(&models.SimpletonGormSQL{
+			SQL:          "Delete from tests Where id = ?",
+			FieldsValues: []interface{}{1},
+		}); err != nil {
+			t.Error(err)
+		}
+
+		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+			SQL:          "Select * from tests",
+			FieldsValues: nil,
+		}); err != nil {
+			t.Error(err)
+		} else if *result.Count == 0 {
+			t.Error("data not found")
+		} else {
+			countAfterCommand = *result.Count
+		}
+
+		if countAfterCommand >= countBeforeCommand {
+			t.Error("The data did not change after the command was executed.")
+		}
+	}
+}

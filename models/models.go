@@ -106,3 +106,8 @@ type SimpletonGormDelete struct {
 	Model      any
 	CheckData  bool
 }
+
+type SimpletonGormSQL struct {
+	SQL          string
+	FieldsValues []interface{}
+}

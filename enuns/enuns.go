@@ -31,6 +31,7 @@ type JoinType string
 
 const (
 	JT_LEFT  JoinType = "LEFT"
+	JT_RIGHT JoinType = "RIGHT"
 	JT_CROSS JoinType = "CROSS"
 )
 
