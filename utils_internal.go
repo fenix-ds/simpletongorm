@@ -181,7 +181,7 @@ func (sg *SimpletonGorm) applyFilters(filters []models.SimpletonGormFindFilters,
 			}
 		}
 
-		if filter.OpComparison == enuns.OPCN_ISNULL {
+		if filter.OpComparison == enuns.OPCN_ISNULL || filter.OpComparison == enuns.OPCN_ISNOTNULL {
 			if index == 0 {
 				query = query.Where(*dataQuery)
 			} else {

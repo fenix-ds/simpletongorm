@@ -2,6 +2,7 @@ package simpletongorm_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/fenix-ds/simpletongorm"
 	"github.com/fenix-ds/simpletongorm/enuns"
@@ -76,12 +77,18 @@ func TestSimpletonGorm_Find_Single_Sucess(t *testing.T) {
 }
 
 func TestSimpletonGorm_Find_WithFilters_Sucess(t *testing.T) {
-	type Test struct{ gorm.Model }
+	type Test struct {
+		gorm.Model
+		Date *time.Time
+	}
 	data := Test{}
+
+	b := true
 
 	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
 		Database:      enuns.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
+		SeeLog:        &b,
 	}); err != nil {
 		t.Error(err)
 	} else if err = sg.Save(&models.SimpletonGormSave{
@@ -91,6 +98,7 @@ func TestSimpletonGorm_Find_WithFilters_Sucess(t *testing.T) {
 	} else if result, err := sg.Find(&models.SimpletonGormFind{
 		TableName: "tests",
 		Filters: []models.SimpletonGormFindFilters{
+			{Field: "date", OpComparison: enuns.OPCN_ISNOTNULL, OpLogic: enuns.OPLC_AND},
 			{Field: "id", Data: data.ID, OpComparison: enuns.OPCN_EQUAL, OpLogic: enuns.OPLC_EMPYT},
 		},
 	}); err != nil {
