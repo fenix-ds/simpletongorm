@@ -75,6 +75,7 @@ func (ryoc *OpComparison) Validate() error {
 		OPCN_IN,
 		OPCN_IS,
 		OPCN_ISNULL,
+		OPCN_ISNOTNULL,
 		OPCN_LESS_EQUAL_ISNULL:
 		return nil
 	default:
