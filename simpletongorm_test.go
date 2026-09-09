@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"github.com/fenix-ds/simpletongorm"
-	"github.com/fenix-ds/simpletongorm/enuns"
-	"github.com/fenix-ds/simpletongorm/models"
+	sgenums "github.com/fenix-ds/simpletongorm/enums"
+	sgmodels "github.com/fenix-ds/simpletongorm/models"
 	"gorm.io/gorm"
 )
 
 func TestNewSimpletonGorm_Sucess(t *testing.T) {
 	type Test struct{ gorm.Model }
 
-	if _, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if _, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
@@ -29,12 +29,12 @@ func TestSimpletonGorm_Save_Sucess(t *testing.T) {
 
 	data := Test{}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &data,
 	}); err != nil {
 		t.Error(err)
@@ -43,7 +43,7 @@ func TestSimpletonGorm_Save_Sucess(t *testing.T) {
 	} else {
 		data.Name = "teste"
 
-		if err = sg.Save(&models.SimpletonGormSave{
+		if err = sg.Save(&sgmodels.SimpletonGormSave{
 			TableName: "tests", Data: &data,
 		}); err != nil {
 			t.Error(err)
@@ -56,16 +56,16 @@ func TestSimpletonGorm_Save_Sucess(t *testing.T) {
 func TestSimpletonGorm_Find_Single_Sucess(t *testing.T) {
 	type Test struct{ gorm.Model }
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &Test{},
 	}); err != nil {
 		t.Error(err)
-	} else if result, err := sg.Find(&models.SimpletonGormFind{
+	} else if result, err := sg.Find(&sgmodels.SimpletonGormFind{
 		TableName: "tests",
 	}); err != nil {
 		t.Error(err)
@@ -85,21 +85,21 @@ func TestSimpletonGorm_Find_WithFilters_Sucess(t *testing.T) {
 
 	b := true
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 		SeeLog:        &b,
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &data,
 	}); err != nil {
 		t.Error(err)
-	} else if result, err := sg.Find(&models.SimpletonGormFind{
+	} else if result, err := sg.Find(&sgmodels.SimpletonGormFind{
 		TableName: "tests",
-		Filters: []models.SimpletonGormFindFilters{
-			{Field: "date", OpComparison: enuns.OPCN_ISNOTNULL, OpLogic: enuns.OPLC_AND},
-			{Field: "id", Data: data.ID, OpComparison: enuns.OPCN_EQUAL, OpLogic: enuns.OPLC_EMPYT},
+		Filters: []sgmodels.SimpletonGormFindFilters{
+			{Field: "date", OpComparison: sgenums.OPCN_ISNOTNULL, OpLogic: sgenums.OPLC_AND},
+			{Field: "id", Data: data.ID, OpComparison: sgenums.OPCN_EQUAL, OpLogic: sgenums.OPLC_EMPYT},
 		},
 	}); err != nil {
 		t.Error(err)
@@ -122,33 +122,33 @@ func TestSimpletonGorm_Find_WithJoins_Sucess(t *testing.T) {
 	test := Test{}
 	testItem := TestItem{}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}, TestItem{}},
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &test,
 	}); err != nil {
 		t.Error(err)
 	} else {
 		testItem.TestId = test.ID
 
-		if err = sg.Save(&models.SimpletonGormSave{
+		if err = sg.Save(&sgmodels.SimpletonGormSave{
 			TableName: "test_items", Data: &testItem,
 		}); err != nil {
 			t.Error(err)
 		}
 
-		if result, err := sg.Find(&models.SimpletonGormFind{
+		if result, err := sg.Find(&sgmodels.SimpletonGormFind{
 			TableName: "test_items",
 			FieldsView: []map[string]any{
 				{"id": "new_id"},
 			},
-			Joins: []models.SimpletonGormFindJoins{
+			Joins: []sgmodels.SimpletonGormFindJoins{
 				{
-					Type: enuns.JT_LEFT, TableMainName: "test_items", TableMainField: "test_id", TableRelatedName: "tests", TableRelatedField: "id",
-					TableRelatedFieldsView: []models.SimpletonGormFindJoinsFieldsView{
+					Type: sgenums.JT_LEFT, TableMainName: "test_items", TableMainField: "test_id", TableRelatedName: "tests", TableRelatedField: "id",
+					TableRelatedFieldsView: []sgmodels.SimpletonGormFindJoinsFieldsView{
 						{FieldName: "*"}},
 				},
 			},
@@ -177,19 +177,19 @@ func TestSimpletonGorm_Find_WithFiltersAndJoins_Sucess(t *testing.T) {
 		Name: "Test 2",
 	}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}, TestItem{}},
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &test,
 	}); err != nil {
 		t.Error(err)
 	} else {
 		testItem.TestId = test.ID
 
-		if err = sg.Save(&models.SimpletonGormSave{
+		if err = sg.Save(&sgmodels.SimpletonGormSave{
 			TableName: "test_items", Data: &testItem,
 		}); err != nil {
 			t.Error(err)
@@ -197,22 +197,22 @@ func TestSimpletonGorm_Find_WithFiltersAndJoins_Sucess(t *testing.T) {
 
 		tbl := "test_items"
 
-		if result, err := sg.Find(&models.SimpletonGormFind{
+		if result, err := sg.Find(&sgmodels.SimpletonGormFind{
 			TableName: tbl,
 			FieldsView: []map[string]any{
 				{"id": "new_id"},
 			},
-			Joins: []models.SimpletonGormFindJoins{
+			Joins: []sgmodels.SimpletonGormFindJoins{
 				{
-					Type: enuns.JT_LEFT, TableMainName: "test_items", TableMainField: "test_id", TableRelatedName: "tests", TableRelatedField: "id",
-					TableRelatedFieldsView: []models.SimpletonGormFindJoinsFieldsView{
+					Type: sgenums.JT_LEFT, TableMainName: "test_items", TableMainField: "test_id", TableRelatedName: "tests", TableRelatedField: "id",
+					TableRelatedFieldsView: []sgmodels.SimpletonGormFindJoinsFieldsView{
 						{FieldName: "*"}},
 				},
 			},
-			Filters: []models.SimpletonGormFindFilters{
+			Filters: []sgmodels.SimpletonGormFindFilters{
 				{
 					TableNameFind: &tbl,
-					Field:         "name", Data: "Test 2", OpComparison: enuns.OPCN_EQUAL, OpLogic: enuns.OPLC_EMPYT,
+					Field:         "name", Data: "Test 2", OpComparison: sgenums.OPCN_EQUAL, OpLogic: sgenums.OPLC_EMPYT,
 				},
 			},
 		}); err != nil {
@@ -232,14 +232,14 @@ func TestSimpletonGorm_Find_WithOrders_Sucess(t *testing.T) {
 
 	test := []Test{{}, {}, {}, {}}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
 	} else {
 		for i := 0; i < len(test); i++ {
-			if err = sg.Save(&models.SimpletonGormSave{
+			if err = sg.Save(&sgmodels.SimpletonGormSave{
 				TableName: "tests", Data: &test[i],
 			}); err != nil {
 				t.Error(err)
@@ -247,12 +247,12 @@ func TestSimpletonGorm_Find_WithOrders_Sucess(t *testing.T) {
 			}
 		}
 
-		if result, err := sg.Find(&models.SimpletonGormFind{
+		if result, err := sg.Find(&sgmodels.SimpletonGormFind{
 			TableName: "tests",
-			Options: &models.SimpletonGormFindOptions{
+			Options: &sgmodels.SimpletonGormFindOptions{
 				Limit: 10, Offset: 3,
-				Orders: []models.SimpletonGormFindOptionsOrders{
-					{Table: "tests", Field: "id", OrderDirection: enuns.RFOOT_DESC},
+				Orders: []sgmodels.SimpletonGormFindOptionsOrders{
+					{Table: "tests", Field: "id", OrderDirection: sgenums.RFOOT_DESC},
 				},
 			},
 		}); err != nil {
@@ -270,19 +270,19 @@ func TestSimpletonGorm_Delete_Sucess(t *testing.T) {
 
 	data := Test{}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
-	} else if err = sg.Save(&models.SimpletonGormSave{
+	} else if err = sg.Save(&sgmodels.SimpletonGormSave{
 		TableName: "tests", Data: &data,
 	}); err != nil {
 		t.Error(err)
 	} else if data.ID == 0 {
 		t.Error("data not save")
-	} else if err = sg.Delete(&models.SimpletonGormDelete{
-		Type:      enuns.DT_SOFT,
+	} else if err = sg.Delete(&sgmodels.SimpletonGormDelete{
+		Type:      sgenums.DT_SOFT,
 		TableName: "tests", FieldName: "id", FieldValue: data.ID, Model: &data,
 	}); err != nil {
 		t.Error(err)
@@ -298,14 +298,14 @@ func TestSimpletonGorm_SQLFind_Sucess(t *testing.T) {
 
 	test := []Test{{}, {}, {}, {}}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
 	} else {
 		for i := 0; i < len(test); i++ {
-			if err = sg.Save(&models.SimpletonGormSave{
+			if err = sg.Save(&sgmodels.SimpletonGormSave{
 				TableName: "tests", Data: &test[i],
 			}); err != nil {
 				t.Error(err)
@@ -313,7 +313,7 @@ func TestSimpletonGorm_SQLFind_Sucess(t *testing.T) {
 			}
 		}
 
-		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+		if result, err := sg.SQLFind(&sgmodels.SimpletonGormSQL{
 			SQL:          "Select * from tests",
 			FieldsValues: nil,
 		}); err != nil {
@@ -333,14 +333,14 @@ func TestSimpletonGorm_SQLExec_Sucess(t *testing.T) {
 
 	test := []Test{{}, {}, {}, {}}
 
-	if sg, err := simpletongorm.NewSimpletonGorm(&models.SimpletonGormParam{
-		Database:      enuns.DB_SQLITEINMEMORY,
+	if sg, err := simpletongorm.NewSimpletonGorm(&sgmodels.SimpletonGormParam{
+		Database:      sgenums.DB_SQLITEINMEMORY,
 		MigrateTables: []interface{}{Test{}},
 	}); err != nil {
 		t.Error(err)
 	} else {
 		for i := 0; i < len(test); i++ {
-			if err = sg.Save(&models.SimpletonGormSave{
+			if err = sg.Save(&sgmodels.SimpletonGormSave{
 				TableName: "tests", Data: &test[i],
 			}); err != nil {
 				t.Error(err)
@@ -351,7 +351,7 @@ func TestSimpletonGorm_SQLExec_Sucess(t *testing.T) {
 		var countBeforeCommand uint64
 		var countAfterCommand uint64
 
-		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+		if result, err := sg.SQLFind(&sgmodels.SimpletonGormSQL{
 			SQL:          "Select * from tests",
 			FieldsValues: nil,
 		}); err != nil {
@@ -362,14 +362,14 @@ func TestSimpletonGorm_SQLExec_Sucess(t *testing.T) {
 			countBeforeCommand = *result.Count
 		}
 
-		if err := sg.SQLExec(&models.SimpletonGormSQL{
+		if err := sg.SQLExec(&sgmodels.SimpletonGormSQL{
 			SQL:          "Delete from tests Where id = ?",
 			FieldsValues: []interface{}{1},
 		}); err != nil {
 			t.Error(err)
 		}
 
-		if result, err := sg.SQLFind(&models.SimpletonGormSQL{
+		if result, err := sg.SQLFind(&sgmodels.SimpletonGormSQL{
 			SQL:          "Select * from tests",
 			FieldsValues: nil,
 		}); err != nil {

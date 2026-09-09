@@ -1,4 +1,4 @@
-package enuns
+package sgenums
 
 import (
 	"errors"

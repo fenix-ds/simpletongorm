@@ -1,14 +1,14 @@
-package models
+package sgmodels
 
 import (
 	"fmt"
 
-	"github.com/fenix-ds/simpletongorm/enuns"
+	sgenums "github.com/fenix-ds/simpletongorm/enums"
 	"github.com/fenix-ds/simpletongorm/utils"
 )
 
 type SimpletonGormParam struct {
-	Database      enuns.Database
+	Database      sgenums.Database
 	FilePathOrDns string
 	MigrateTables []interface{}
 	SeeLog        *bool
@@ -19,11 +19,11 @@ func (param SimpletonGormParam) CheckData() error {
 		return err
 	}
 
-	if param.Database != enuns.DB_SQLITEINMEMORY && len(param.FilePathOrDns) == 0 {
+	if param.Database != sgenums.DB_SQLITEINMEMORY && len(param.FilePathOrDns) == 0 {
 		return fmt.Errorf("file path or dns not found")
 	}
 
-	if param.Database == enuns.DB_SQLITEINMEMORY && param.MigrateTables == nil {
+	if param.Database == sgenums.DB_SQLITEINMEMORY && param.MigrateTables == nil {
 		return fmt.Errorf("to use SQLite in memory, there must be tables to perform the migration")
 	}
 
@@ -58,7 +58,7 @@ type SimpletonGormFind struct {
 }
 
 type SimpletonGormFindJoins struct {
-	Type                            enuns.JoinType
+	Type                            sgenums.JoinType
 	TableMainName                   string
 	TableMainField                  string
 	TableRelatedName                string
@@ -77,8 +77,8 @@ type SimpletonGormFindFilters struct {
 	TableNameFind *string
 	Field         string
 	Data          any
-	OpComparison  enuns.OpComparison
-	OpLogic       enuns.OpLogic
+	OpComparison  sgenums.OpComparison
+	OpLogic       sgenums.OpLogic
 }
 
 type SimpletonGormFindOptions struct {
@@ -88,7 +88,7 @@ type SimpletonGormFindOptions struct {
 }
 
 type SimpletonGormFindOptionsOrders struct {
-	OrderDirection enuns.OptionsOrderDirection
+	OrderDirection sgenums.OptionsOrderDirection
 	Table          any
 	Field          string
 }
@@ -99,7 +99,7 @@ type SimpletonGormResult struct {
 }
 
 type SimpletonGormDelete struct {
-	Type       enuns.DeleteType
+	Type       sgenums.DeleteType
 	TableName  string
 	FieldName  string
 	FieldValue any

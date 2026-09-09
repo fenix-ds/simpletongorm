@@ -3,8 +3,8 @@ package simpletongorm
 import (
 	"fmt"
 
-	"github.com/fenix-ds/simpletongorm/enuns"
-	"github.com/fenix-ds/simpletongorm/models"
+	sgenums "github.com/fenix-ds/simpletongorm/enums"
+	sgmodels "github.com/fenix-ds/simpletongorm/models"
 	"github.com/fenix-ds/simpletongorm/utils"
 	"gorm.io/gorm"
 )
@@ -24,11 +24,11 @@ func (sg *SimpletonGorm) dbConnectionActive() (*gorm.DB, error) {
 	return sg.db, nil
 }
 
-func (sg *SimpletonGorm) applyJoinsFields(fieldsQueryMain string, joins []models.SimpletonGormFindJoins) string {
+func (sg *SimpletonGorm) applyJoinsFields(fieldsQueryMain string, joins []sgmodels.SimpletonGormFindJoins) string {
 	//CAMPOS QUE VEM DO JOIN
 	var fieldsListView string
 	for index, join := range joins {
-		if join.Type == enuns.JT_LEFT {
+		if join.Type == sgenums.JT_LEFT {
 			for index, fieldView := range join.TableRelatedFieldsView {
 				if fieldView.FieldName == "*" {
 					fieldsListView = fmt.Sprintf("%s.%s", join.TableRelatedName, fieldView.FieldName)
@@ -65,12 +65,12 @@ func (sg *SimpletonGorm) applyJoinsFields(fieldsQueryMain string, joins []models
 	}
 }
 
-func (sg *SimpletonGorm) applyJoinsConditions(query *gorm.DB, joins []models.SimpletonGormFindJoins, isCount bool) error {
+func (sg *SimpletonGorm) applyJoinsConditions(query *gorm.DB, joins []sgmodels.SimpletonGormFindJoins, isCount bool) error {
 	for _, join := range joins {
 		var joinSQL string
 
 		switch join.Type {
-		case enuns.JT_LEFT:
+		case sgenums.JT_LEFT:
 			joinSQL = fmt.Sprintf("LEFT JOIN %s ON %s.%s = %s.%s", join.TableRelatedName, join.TableRelatedName,
 				join.TableRelatedField, join.TableMainName, join.TableMainField)
 
@@ -82,7 +82,7 @@ func (sg *SimpletonGorm) applyJoinsConditions(query *gorm.DB, joins []models.Sim
 			if join.TableRelatedConditionAdditional != nil {
 				joinSQL = fmt.Sprintf("%s %s", joinSQL, join.TableRelatedConditionAdditional)
 			}
-		case enuns.JT_CROSS:
+		case sgenums.JT_CROSS:
 			joinSQL = fmt.Sprintf("CROSS JOIN %s", join.TableRelatedName)
 
 			if join.TableRelatedNameRename != nil {
@@ -98,10 +98,10 @@ func (sg *SimpletonGorm) applyJoinsConditions(query *gorm.DB, joins []models.Sim
 	return nil
 }
 
-func (sg *SimpletonGorm) validateJoins(db *gorm.DB, joins []models.SimpletonGormFindJoins) error {
+func (sg *SimpletonGorm) validateJoins(db *gorm.DB, joins []sgmodels.SimpletonGormFindJoins) error {
 	for _, join := range joins {
 		switch join.Type {
-		case enuns.JT_LEFT, enuns.JT_RIGHT:
+		case sgenums.JT_LEFT, sgenums.JT_RIGHT:
 			//CHECK TABLE MAIN
 			if !db.Migrator().HasTable(join.TableMainName) {
 				return fmt.Errorf("%s table to create join not found", join.TableMainName)
@@ -145,7 +145,7 @@ func (sg *SimpletonGorm) validateJoins(db *gorm.DB, joins []models.SimpletonGorm
 					}
 				}
 			}
-		case enuns.JT_CROSS:
+		case sgenums.JT_CROSS:
 			if !db.Migrator().HasTable(join.TableRelatedName) {
 				return fmt.Errorf("%s table to create join not found", join.TableRelatedName)
 			}
@@ -163,7 +163,7 @@ func (sg *SimpletonGorm) validateJoins(db *gorm.DB, joins []models.SimpletonGorm
 	return nil
 }
 
-func (sg *SimpletonGorm) applyFilters(filters []models.SimpletonGormFindFilters, query *gorm.DB) error {
+func (sg *SimpletonGorm) applyFilters(filters []sgmodels.SimpletonGormFindFilters, query *gorm.DB) error {
 	if query.Error != nil {
 		return query.Error
 	}
@@ -181,25 +181,39 @@ func (sg *SimpletonGorm) applyFilters(filters []models.SimpletonGormFindFilters,
 			}
 		}
 
-		if filter.OpComparison == enuns.OPCN_ISNULL || filter.OpComparison == enuns.OPCN_ISNOTNULL {
+		switch filter.OpComparison {
+		case sgenums.OPCN_IN:
+			values := filter.Data.([]interface{})
+
+			if index == 0 {
+				query = query.Where(*dataQuery, values...)
+			} else {
+				switch filters[index-1].OpLogic {
+				case sgenums.OPLC_OR:
+					query = query.Or(*dataQuery, values...)
+				case sgenums.OPLC_AND:
+					query = query.Where(*dataQuery, values...)
+				}
+			}
+		case sgenums.OPCN_ISNULL, sgenums.OPCN_ISNOTNULL:
 			if index == 0 {
 				query = query.Where(*dataQuery)
 			} else {
 				switch filters[index-1].OpLogic {
-				case enuns.OPLC_OR:
+				case sgenums.OPLC_OR:
 					query = query.Or(*dataQuery)
-				case enuns.OPLC_AND:
+				case sgenums.OPLC_AND:
 					query = query.Where(*dataQuery)
 				}
 			}
-		} else {
+		default:
 			if index == 0 {
 				query = query.Where(*dataQuery, filter.Data)
 			} else {
 				switch filters[index-1].OpLogic {
-				case enuns.OPLC_OR:
+				case sgenums.OPLC_OR:
 					query = query.Or(*dataQuery, filter.Data)
-				case enuns.OPLC_AND:
+				case sgenums.OPLC_AND:
 					query = query.Where(*dataQuery, filter.Data)
 				}
 			}
@@ -209,7 +223,7 @@ func (sg *SimpletonGorm) applyFilters(filters []models.SimpletonGormFindFilters,
 	return nil
 }
 
-func (sg *SimpletonGorm) generateSQLFilter(filter *models.SimpletonGormFindFilters) (*string, error) {
+func (sg *SimpletonGorm) generateSQLFilter(filter *sgmodels.SimpletonGormFindFilters) (*string, error) {
 	var query string
 	var err error
 
@@ -218,19 +232,19 @@ func (sg *SimpletonGorm) generateSQLFilter(filter *models.SimpletonGormFindFilte
 	}
 
 	switch filter.OpComparison {
-	case enuns.OPCN_LIKE_ANYWHERE, enuns.OPCN_LIKE_JUSTBEGINNING:
+	case sgenums.OPCN_LIKE_ANYWHERE, sgenums.OPCN_LIKE_JUSTBEGINNING:
 		query = fmt.Sprintf("%s.%s LIKE ?", *filter.TableNameFind, filter.Field)
-	case enuns.OPCN_BETWEEN:
+	case sgenums.OPCN_BETWEEN:
 		query, err = sg.setDataToQueryComparison_BETWEEN(filter)
-	case enuns.OPCN_IN:
+	case sgenums.OPCN_IN:
 		query, err = sg.setDataToQueryComparison_IN(filter)
-	case enuns.OPCN_IS:
+	case sgenums.OPCN_IS:
 		query = fmt.Sprintf("%s.%s IS ?", *filter.TableNameFind, filter.Field)
-	case enuns.OPCN_ISNULL:
+	case sgenums.OPCN_ISNULL:
 		query = fmt.Sprintf("%s.%s IS NULL", *filter.TableNameFind, filter.Field)
-	case enuns.OPCN_ISNOTNULL:
+	case sgenums.OPCN_ISNOTNULL:
 		query = fmt.Sprintf("%s.%s IS NOT NULL", *filter.TableNameFind, filter.Field)
-	case enuns.OPCN_LESS_EQUAL_ISNULL:
+	case sgenums.OPCN_LESS_EQUAL_ISNULL:
 		query = fmt.Sprintf("%s.%s <= ? OR %s.%s IS NULL", *filter.TableNameFind, filter.Field, *filter.TableNameFind, filter.Field)
 	default:
 		query = fmt.Sprintf("%s.%s %s ?", *filter.TableNameFind, filter.Field, string(filter.OpComparison))
@@ -243,7 +257,7 @@ func (sg *SimpletonGorm) generateSQLFilter(filter *models.SimpletonGormFindFilte
 	return &query, nil
 }
 
-func (sg *SimpletonGorm) setDataToQueryComparison_BETWEEN(filter *models.SimpletonGormFindFilters) (string, error) {
+func (sg *SimpletonGorm) setDataToQueryComparison_BETWEEN(filter *sgmodels.SimpletonGormFindFilters) (string, error) {
 	if dataList, ok := filter.Data.([]interface{}); ok {
 		if len(dataList) != 2 {
 			return "", fmt.Errorf("the BETWEEN selector must have 2 values")
@@ -258,7 +272,7 @@ func (sg *SimpletonGorm) setDataToQueryComparison_BETWEEN(filter *models.Simplet
 	}
 }
 
-func (sg *SimpletonGorm) setDataToQueryComparison_IN(filter *models.SimpletonGormFindFilters) (string, error) {
+func (sg *SimpletonGorm) setDataToQueryComparison_IN(filter *sgmodels.SimpletonGormFindFilters) (string, error) {
 	if dataList, ok := filter.Data.([]interface{}); ok {
 		if len(dataList) < 2 {
 			return "", fmt.Errorf("the IN selector must have at least 2 values")
@@ -283,7 +297,7 @@ func (sg *SimpletonGorm) setDataToQueryComparison_IN(filter *models.SimpletonGor
 	}
 }
 
-func (sg *SimpletonGorm) modifyDataAccordingToRepositoryOperatorComparison(comparison enuns.OpComparison, data interface{}) (interface{}, error) {
+func (sg *SimpletonGorm) modifyDataAccordingToRepositoryOperatorComparison(comparison sgenums.OpComparison, data interface{}) (interface{}, error) {
 	if err := comparison.Validate(); err != nil {
 		return nil, err
 	}
@@ -297,9 +311,9 @@ func (sg *SimpletonGorm) modifyDataAccordingToRepositoryOperatorComparison(compa
 		result = data
 	} else {
 		switch comparison {
-		case enuns.OPCN_LIKE_JUSTBEGINNING:
+		case sgenums.OPCN_LIKE_JUSTBEGINNING:
 			result = str + "%"
-		case enuns.OPCN_LIKE_ANYWHERE:
+		case sgenums.OPCN_LIKE_ANYWHERE:
 			result = "%" + str + "%"
 		default:
 			result = str

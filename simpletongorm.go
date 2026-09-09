@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/fenix-ds/simpletongorm/enuns"
-	"github.com/fenix-ds/simpletongorm/models"
+	sgenums "github.com/fenix-ds/simpletongorm/enums"
+	sgmodels "github.com/fenix-ds/simpletongorm/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -15,11 +15,11 @@ import (
 )
 
 type SimpletonGorm struct {
-	database *enuns.Database
+	database *sgenums.Database
 	db       *gorm.DB
 }
 
-func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err error) {
+func NewSimpletonGorm(param *sgmodels.SimpletonGormParam) (sg *SimpletonGorm, err error) {
 	if err := param.CheckData(); err != nil {
 		return nil, err
 	}
@@ -31,13 +31,13 @@ func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err 
 
 	var db *gorm.DB
 	switch param.Database {
-	case enuns.DB_SQLITEINMEMORY:
+	case sgenums.DB_SQLITEINMEMORY:
 		db, err = gorm.Open(sqlite.Open(":memory:"), &gormConfig)
-	case enuns.DB_SQLITEFILE:
+	case sgenums.DB_SQLITEFILE:
 		db, err = gorm.Open(sqlite.Open(param.FilePathOrDns), &gormConfig)
-	case enuns.DB_MARIADB:
+	case sgenums.DB_MARIADB:
 		db, err = gorm.Open(mysql.Open(param.FilePathOrDns), &gormConfig)
-	case enuns.DB_POSTGRESQL:
+	case sgenums.DB_POSTGRESQL:
 		db, err = gorm.Open(postgres.Open(param.FilePathOrDns), &gormConfig)
 	default:
 		return nil, fmt.Errorf("database type invalid")
@@ -47,7 +47,7 @@ func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err 
 		return nil, err
 	}
 
-	if param.Database != enuns.DB_SQLITEINMEMORY {
+	if param.Database != sgenums.DB_SQLITEINMEMORY {
 		if param.MigrateTables != nil {
 			if err = dbMigrate(db, param.MigrateTables); err != nil {
 				return nil, err
@@ -76,7 +76,7 @@ func NewSimpletonGorm(param *models.SimpletonGormParam) (sg *SimpletonGorm, err 
 	}, nil
 }
 
-func (sg *SimpletonGorm) Save(param *models.SimpletonGormSave) error {
+func (sg *SimpletonGorm) Save(param *sgmodels.SimpletonGormSave) error {
 	db, err := sg.dbConnectionActive()
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func (sg *SimpletonGorm) Save(param *models.SimpletonGormSave) error {
 	return nil
 }
 
-func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.SimpletonGormResult, err error) {
+func (sg *SimpletonGorm) Find(param *sgmodels.SimpletonGormFind) (result *sgmodels.SimpletonGormResult, err error) {
 	// DATABASE CONNECTION
 	db, err := sg.dbConnectionActive()
 	if err != nil {
@@ -173,7 +173,7 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 	//JOINS
 	if len(param.Joins) > 0 {
 		for _, j := range param.Joins {
-			if j.Type != enuns.JT_LEFT && j.Type != enuns.JT_CROSS {
+			if j.Type != sgenums.JT_LEFT && j.Type != sgenums.JT_CROSS {
 				return nil, fmt.Errorf("join type invalid")
 			}
 		}
@@ -243,7 +243,7 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 					orderData += order.Field
 				}
 
-				if order.OrderDirection == enuns.RFOOT_ASC {
+				if order.OrderDirection == sgenums.RFOOT_ASC {
 					orderData += " ASC"
 				} else {
 					orderData += " DESC"
@@ -279,10 +279,10 @@ func (sg *SimpletonGorm) Find(param *models.SimpletonGormFind) (result *models.S
 		return nil, err
 	}
 
-	return &models.SimpletonGormResult{Data: data, Count: &countResult}, nil
+	return &sgmodels.SimpletonGormResult{Data: data, Count: &countResult}, nil
 }
 
-func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
+func (sg *SimpletonGorm) Delete(param *sgmodels.SimpletonGormDelete) error {
 	db, err := sg.dbConnectionActive()
 	if err != nil {
 		return err
@@ -292,7 +292,7 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 		return fmt.Errorf("parameters not found")
 	}
 
-	if param.Type != enuns.DT_SOFT && param.Type != enuns.DT_PERMANENT {
+	if param.Type != sgenums.DT_SOFT && param.Type != sgenums.DT_PERMANENT {
 		return fmt.Errorf("invalid deletion type")
 	}
 
@@ -308,15 +308,15 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 
 	if param.FieldValue == nil {
 		return fmt.Errorf("no data found to delete")
-	} else if param.Type == enuns.DT_SOFT && param.Model == nil {
+	} else if param.Type == sgenums.DT_SOFT && param.Model == nil {
 		return fmt.Errorf("no data found to delete")
 	}
 
 	var result *gorm.DB
 	switch param.Type {
-	case enuns.DT_SOFT:
+	case sgenums.DT_SOFT:
 		result = db.Table(param.TableName).Where(param.FieldName+"=?", param.FieldValue).Delete(param.Model)
-	case enuns.DT_PERMANENT:
+	case sgenums.DT_PERMANENT:
 		result = db.Table(param.TableName).Where(param.FieldName+"=?", param.FieldValue).Delete(nil)
 	}
 
@@ -331,7 +331,7 @@ func (sg *SimpletonGorm) Delete(param *models.SimpletonGormDelete) error {
 	return nil
 }
 
-func (sg *SimpletonGorm) SQLExec(param *models.SimpletonGormSQL) error {
+func (sg *SimpletonGorm) SQLExec(param *sgmodels.SimpletonGormSQL) error {
 	db, err := sg.dbConnectionActive()
 	if err != nil {
 		return err
@@ -350,7 +350,7 @@ func (sg *SimpletonGorm) SQLExec(param *models.SimpletonGormSQL) error {
 	return result.Error
 }
 
-func (sg *SimpletonGorm) SQLFind(param *models.SimpletonGormSQL) (result *models.SimpletonGormResult, err error) {
+func (sg *SimpletonGorm) SQLFind(param *sgmodels.SimpletonGormSQL) (result *sgmodels.SimpletonGormResult, err error) {
 	db, err := sg.dbConnectionActive()
 	if err != nil {
 		return nil, err
@@ -371,7 +371,7 @@ func (sg *SimpletonGorm) SQLFind(param *models.SimpletonGormSQL) (result *models
 
 	var count uint64 = uint64(len(data))
 
-	return &models.SimpletonGormResult{
+	return &sgmodels.SimpletonGormResult{
 		Data:  data,
 		Count: &count,
 	}, nil
