@@ -279,13 +279,12 @@ func (sg *SimpletonGorm) setDataToQueryComparison_IN(filter *sgmodels.SimpletonG
 		}
 
 		var values string
-		for i := 1; i < len(dataList); i++ {
-			if i == 1 {
+		for i := 0; i < len(dataList); i++ {
+			if i == 0 {
 				values = "?"
 			} else {
-				values = values + (",?")
+				values += ",?"
 			}
-
 		}
 
 		result := fmt.Sprintf("%s.%s IN (%s)", *filter.TableNameFind, filter.Field, values)
